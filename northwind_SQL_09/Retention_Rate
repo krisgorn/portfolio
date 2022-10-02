@@ -1,0 +1,34 @@
+----Рассчитайте аналог Retention Rate по неделям для компаний-заказчиков. 
+----Объедините компании в когорты по неделе их первого заказа (поле order_date). 
+----Возвращение определяйте по наличию заказа в течение текущей недели.
+
+WITH users AS
+  (SELECT customer_id,
+          DATE_TRUNC('week', CAST(t.start_dt AS timestamp)) AS dt,
+          COUNT(*) OVER (PARTITION BY DATE_TRUNC('week', CAST(t.start_dt AS timestamp))) AS cohort_users_cnt
+   FROM
+     (SELECT u1.customer_id,
+             DATE_TRUNC('week', CAST(o1.order_date AS timestamp)) AS creation_date,
+             MIN(o1.order_date) OVER (PARTITION BY u1.customer_id
+                                      ORDER BY o1.order_date) AS start_dt
+      FROM northwind.customers u1
+      JOIN northwind.orders o1 ON u1.customer_id = o1.customer_id) t
+   GROUP BY customer_id,
+            dt),
+     purchase AS
+  (SELECT customer_id,
+          DATE_TRUNC('week', CAST(order_date AS timestamp)) AS purchase_date
+   FROM northwind.orders
+   GROUP BY customer_id,
+            purchase_date)
+SELECT u.dt AS cohort_dt,
+       p.purchase_date,
+       COUNT(u.customer_id) AS users_cnt,
+       u.cohort_users_cnt,
+       ROUND(COUNT(u.customer_id) * 100.0 / cohort_users_cnt, 2) AS retention_rate
+FROM users u
+JOIN purchase p ON u.customer_id = p.customer_id
+GROUP BY 1,
+         2,
+         4
+ORDER BY cohort_dt;
