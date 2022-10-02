@@ -1,3 +1,8 @@
+
+----Для каждого года из таблицы заказов посчитайте суммарную выручку с продаж за этот год.
+----Используйте детальную информацию о заказах. Не забудьте учесть скидку (поле discount) на товар.
+----Результаты отсортируйте по убыванию значения выручки.
+
 with
 deneg as (SELECT order_id,(sum((unit_price*quantity)-((unit_price*quantity)*discount))) as total_price
 FROM northwind.order_details
