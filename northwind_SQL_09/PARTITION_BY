@@ -1,0 +1,22 @@
+----Для каждой компании, которая оформила хотя бы два заказа, выведите:
+----дату оформления второго заказа (поле order_date), округлённую до месяца;
+----идентификатор компании, оформившей заказ (поле customer_id).
+
+with kol as (SELECT customer_id 
+FROM northwind.orders 
+group by customer_id  ---, (DATE_TRUNC('month', order_date)::date)
+having  count(order_id) >=2
+order by customer_id desc ),
+
+sek as(
+SELECT customer_id ,  (DATE_TRUNC('month', order_date)::date) as y, ROW_NUMBER()  OVER (PARTITION BY customer_id order by (DATE_TRUNC('month', order_date)::date)) AS order_idl
+FROM northwind.orders 
+
+order by customer_id desc, (DATE_TRUNC('month', order_date)::date))
+
+
+select k.customer_id, s.y
+from sek as s 
+right join kol as k on s.customer_id = k.customer_id
+
+where s.order_idl = 2
