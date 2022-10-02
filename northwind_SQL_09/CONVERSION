@@ -1,0 +1,32 @@
+----Для каждого месяца с июля 1996 года по май 1998 года посчитайте конверсию в процентах. 
+----Найдите количество уникальных компаний-заказчиков в текущем месяце. 
+----Разделите его на общее количество компаний-заказчиков Northwind, которые оформили хотя бы один заказ за всё предыдущее время, включая текущий месяц. 
+----Под уникальностью компании в этой задаче подразумевается отсутствие повторов в выборке.
+----В итоговой таблице должны быть следующие поля:
+----дата первого числа текущего месяца;
+----количество компаний-заказчиков в текущий месяц;
+----общее количество компаний-заказчиков за всё предыдущее время, включая текущий месяц;
+----отношение количества покупателей за текущий месяц к общему количеству покупателей.
+
+WITH f AS (
+WITH data AS (
+    SELECT DATE_TRUNC('month', order_date)::date AS first_purchase,
+           customer_id
+    FROM northwind.orders),
+total_customers AS (
+SELECT DATE_TRUNC('MONTH', order_date)::date AS month,
+       COUNT(DISTINCT(customer_id)) AS customers_this_month
+FROM Northwind.orders
+WHERE order_date BETWEEN '1996-07-01' AND '1998-06-01'
+GROUP BY DATE_TRUNC('MONTH', order_date)::date)
+SELECT month,
+       customers_this_month,
+  (SELECT COUNT(DISTINCT customer_id)
+   FROM data
+   WHERE first_purchase <= month) AS total_customers
+FROM total_customers)
+select month,
+       customers_this_month,
+       total_customers,
+       ROUND(CAST( 100.0 * customers_this_month  / total_customers AS NUMERIC), 2)  AS conversion
+from f
