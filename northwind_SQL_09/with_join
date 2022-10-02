@@ -1,0 +1,20 @@
+with
+deneg as (SELECT order_id,(sum((unit_price*quantity)-((unit_price*quantity)*discount))) as total_price
+FROM northwind.order_details
+group by order_id
+),
+
+
+dat as (
+    SELECT order_id, DATE_TRUNC('year', order_date)::date as y
+FROM northwind.orders 
+group by order_id, DATE_TRUNC('year', order_date)::date
+    
+
+    )
+    
+    select EXTRACT(year FROM da.y) , sum(de.total_price)
+    FROM deneg as de
+left join dat as da on de.order_id = da.order_id
+group by  da.y
+order by sum(de.total_price) desc
